@@ -113,14 +113,14 @@ resource "yandex_compute_instance" "server-b" {
 resource "local_file" "inventory" {
   content = <<-XYZ
   [bastion]
-  ${yandex_compute_instance.bastion.hostname}.${yandex_compute_instance.bastion.zone}
-  
+  ${yandex_compute_instance.bastion.network_interface.0.nat_ip_address}
+
   [webservers]
-  ${yandex_compute_instance.server-a.hostname}.${yandex_compute_instance.server-a.zone}
-  ${yandex_compute_instance.server-b.hostname}.${yandex_compute_instance.server-a.zone}
+  ${yandex_compute_instance.server-a.fqdn} ansible_host=${yandex_compute_instance.server-a.network_interface.0.ip_address}
+  ${yandex_compute_instance.server-b.fqdn} ansible_host=${yandex_compute_instance.server-b.network_interface.0.ip_address}
 
   [webservers:vars]
-  ansible__ssh_common_args='-o ProxyCommand="ssh -p 22 -W %h:%p -q user@${yandex_compute_instance.bastion.hostname}.${yandex_compute_instance.bastion.zone}"'
+  ansible_ssh_common_args='-o ProxyCommand="ssh -p 22 -W %h:%p -q user@${yandex_compute_instance.bastion.network_interface.0.nat_ip_address}"'
   XYZ
   filename= "./hosts.ini"
 }

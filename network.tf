@@ -95,9 +95,15 @@ resource "yandex_vpc_security_group" "servers-security-group" {
 
 }
 
+
+#        APPLICATION 
+#	 LOAD
+#  	 BALANCER
+
+
 # TARGET GROUP
 resource "yandex_alb_target_group" "servers-tg" {
-  name = "servers-target-group"
+  name = "server-target-group-a"
   
   target {
     subnet_id = yandex_vpc_subnet.diploma-zone-a.id
@@ -110,18 +116,12 @@ resource "yandex_alb_target_group" "servers-tg" {
   }
 }
 
-# BACKEND GROUP W HEALTHCHECK
+# BACKEND GROUP 
 resource "yandex_alb_backend_group" "servers-bg" {
-  name = "servers-backend-group"
-
-  session_affinity {
-    connection {
-      source_ip = yandex_compute_instance.bastion.network_interface.0.ip_address
-    }
-  }
+  name = "server-backend-group"
 
   http_backend {
-    name             = "servers-http-backend"
+    name             = "servers-backend"
     weight           = 1
     port             = 80
     target_group_ids = ["${yandex_alb_target_group.servers-tg.id}"]
@@ -135,7 +135,6 @@ resource "yandex_alb_backend_group" "servers-bg" {
         path = "/"
       }
     }
-    http2 = "true"
   }
 }
 
@@ -148,12 +147,17 @@ resource "yandex_alb_http_router" "servers-hr" {
 resource "yandex_alb_virtual_host" "servers-vhost" {
   name           = "servers-virtual-host"
   http_router_id = yandex_alb_http_router.servers-hr.id
+
   route {
     name = "servers-route"
     http_route {
+      http_match {
+        path {
+          exact = "/"
+        }
+      }
       http_route_action {
         backend_group_id = yandex_alb_backend_group.servers-bg.id
-        timeout          = "10s"
       }
     }
   }
@@ -176,16 +180,14 @@ resource "yandex_alb_load_balancer" "servers-alb" {
   }
 
   listener {
-    name		= "listener"
+    name		= "http-listener"
     endpoint {
       address {
         external_ipv4_address {
-	  address = yandex_vpc_address.servers-alb-ip.external_ipv4_address.0.address
         }
       }
       ports = [80]
-    }
-    
+    }    
     http {
       handler {
         http_router_id = yandex_alb_http_router.servers-hr.id
@@ -194,10 +196,3 @@ resource "yandex_alb_load_balancer" "servers-alb" {
   }
 } 
 
- 
-resource "yandex_vpc_address" "servers-alb-ip" {
-  name = "servers-alb-ip"
-  external_ipv4_address {
-    zone_id = "ru-central1-a"
-  }
-}
