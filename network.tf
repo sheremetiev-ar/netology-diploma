@@ -38,7 +38,7 @@ resource "yandex_vpc_route_table" "diploma-rt" {
   }
 }
 
-# SECURITY GROUP
+# SECURITY GROUP BASTION
 resource "yandex_vpc_security_group" "bastion" {
   name		= "bastion-security-group-diploma"
   network_id	= yandex_vpc_network.diploma.id
@@ -57,6 +57,7 @@ resource "yandex_vpc_security_group" "bastion" {
   }
 }
 
+# SECURITY GROUP LAN
 resource "yandex_vpc_security_group" "LAN" {
   name          = "LAN-security-group-diploma"
   network_id    = yandex_vpc_network.diploma.id
@@ -76,6 +77,7 @@ resource "yandex_vpc_security_group" "LAN" {
   }
 }
 
+# SECURITY GROUP WEB-SERVERS
 resource "yandex_vpc_security_group" "servers-security-group" {
   name		= "servers-security-group-diploma"
   network_id	= yandex_vpc_network.diploma.id
@@ -92,107 +94,36 @@ resource "yandex_vpc_security_group" "servers-security-group" {
     port		= 80
     v4_cidr_blocks      = ["0.0.0.0/0"]
   }
-
 }
 
+# SECURITY GROUP ELASTIC SEARCH
+resource "yandex_vpc_security_group" "elastic-security-group" {
+  name          = "elastic-security-group-diploma"
+  network_id    = yandex_vpc_network.diploma.id
 
-#        APPLICATION 
-#	 LOAD
-#  	 BALANCER
-
-
-# TARGET GROUP
-resource "yandex_alb_target_group" "servers-tg" {
-  name = "server-target-group-a"
-  
-  target {
-    subnet_id = yandex_vpc_subnet.diploma-zone-a.id
-    ip_address = yandex_compute_instance.server-a.network_interface.0.ip_address
+  ingress {
+    description         = "Allow ELASTIC PORT"
+    protocol            = "TCP"
+    port                = 9200
+    v4_cidr_blocks      = ["0.0.0.0/0"]
   }
-
-  target {
-    subnet_id = yandex_vpc_subnet.diploma-zone-b.id
-    ip_address = yandex_compute_instance.server-b.network_interface.0.ip_address
+  ingress {
+    description         = "Allow ELASTIC PORT"
+    protocol            = "TCP"
+    port                = 9300
+    v4_cidr_blocks      = ["0.0.0.0/0"]
   }
 }
 
-# BACKEND GROUP 
-resource "yandex_alb_backend_group" "servers-bg" {
-  name = "server-backend-group"
+# SECURITY GROUP KIBANA
+resource "yandex_vpc_security_group" "kibana-security-group" {
+  name          = "kibana-security-group-diploma"
+  network_id    = yandex_vpc_network.diploma.id
 
-  http_backend {
-    name             = "servers-backend"
-    weight           = 1
-    port             = 80
-    target_group_ids = ["${yandex_alb_target_group.servers-tg.id}"]
-    load_balancing_config {
-      panic_threshold = 50
-    }
-    healthcheck {
-      timeout  = "1s"
-      interval = "1s"
-      http_healthcheck {
-        path = "/"
-      }
-    }
+  ingress {
+    description         = "Allow KIBANA PORT"
+    protocol            = "TCP"
+    port                = 5601
+    v4_cidr_blocks      = ["0.0.0.0/0"]
   }
 }
-
-# HTTP ROUTER
-resource "yandex_alb_http_router" "servers-hr" {
-  name = "servers-http-router"
-}
-
-# VIRTUAL HOST
-resource "yandex_alb_virtual_host" "servers-vhost" {
-  name           = "servers-virtual-host"
-  http_router_id = yandex_alb_http_router.servers-hr.id
-
-  route {
-    name = "servers-route"
-    http_route {
-      http_match {
-        path {
-          exact = "/"
-        }
-      }
-      http_route_action {
-        backend_group_id = yandex_alb_backend_group.servers-bg.id
-      }
-    }
-  }
-}
-
-# APPLICATION LOAD BALANCER
-resource "yandex_alb_load_balancer" "servers-alb" {
-  name		= "servers-app-load-balancer"
-  network_id	= yandex_vpc_network.diploma.id
-  
-  allocation_policy {
-    location {
-      zone_id		= "ru-central1-a"
-      subnet_id		= yandex_vpc_subnet.diploma-zone-a.id
-    }
-    location {
-      zone_id		= "ru-central1-b"
-      subnet_id		= yandex_vpc_subnet.diploma-zone-b.id
-    }
-  }
-
-  listener {
-    name		= "http-listener"
-    endpoint {
-      address {
-        external_ipv4_address {
-        }
-      }
-      ports = [80]
-    }    
-    http {
-      handler {
-        http_router_id = yandex_alb_http_router.servers-hr.id
-      }
-    }
-  }
-} 
-

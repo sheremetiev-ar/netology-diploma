@@ -1,0 +1,16 @@
+---
+- name: nginx
+  gather_facts: false
+  hosts: webservers
+  roles:
+    - role: ~/.ansible/roles/heman021720.nginx-role
+  vars:
+    ansible_ssh_user: "user"
+  become: yes
+
+  tasks:
+    - name: add user to adm group
+      user:
+        name: "user"
+        group: "adm"
+        append: yes

@@ -1,0 +1,41 @@
+---
+- name: filebeat container
+  hosts: webservers
+  become: true
+
+  vars:
+    ansible_ssh_user: "user"
+    filebeat_config: |
+        filebeat.inputs:
+          - type: log
+            paths:
+              - /var/log/nginx/access.log
+              - /var/log/nginx/error.log
+        output.elasticsearch:
+          hosts: ["http://10.0.1.27:9200"]
+  tasks:
+    - name: creating dir
+      file:
+        path: /etc/filebeat
+        state: directory
+        owner: user
+        group: user
+        mode: '0755'
+
+    - name: filebeat config
+      copy:
+        dest: /etc/filebeat/filebeat.yml
+        content: "{{filebeat_config}}"
+
+    - name: run container
+      docker_container:
+        name: filebeat01
+        image: elastic/filebeat:8.19.6
+        state: started
+        restart_policy: unless-stopped
+        network_mode: host
+        env:
+          ELASTICSEARCH_HOST: "10.0.1.27"
+          ELASTICSEARCH_PORT: "9200"
+        volumes:
+          - /etc/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
