@@ -1,6 +1,6 @@
 ---
 - name: elasticsearch container
-  hosts: elastic-search
+  hosts: elasticsearch
   become: yes
   vars:
     ansible_ssh_user: "user"

@@ -191,7 +191,7 @@ ${yandex_compute_instance.bastion.network_interface.0.nat_ip_address}
 ${yandex_compute_instance.server-a.fqdn}
 ${yandex_compute_instance.server-b.fqdn}
 
-[elastic-search]
+[elasticsearch]
 ${yandex_compute_instance.elastic.fqdn}
 
 [kibana]
@@ -200,7 +200,7 @@ ${yandex_compute_instance.kibana.fqdn}
 [kibana:vars]
 ansible_ssh_common_args='-o ProxyCommand="ssh -p 22 -W %h:%p -q user@${yandex_compute_instance.bastion.network_interface.0.nat_ip_address}"'
 
-[elastic-search:vars]
+[elasticsearch:vars]
 ansible_ssh_common_args='-o ProxyCommand="ssh -p 22 -W %h:%p -q user@${yandex_compute_instance.bastion.network_interface.0.nat_ip_address}"'
 
 [webservers:vars]
