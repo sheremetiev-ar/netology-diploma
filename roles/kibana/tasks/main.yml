@@ -1,0 +1,13 @@
+---
+# tasks file for kibana
+- name: run kibana docker container
+  docker_container:
+    name: kibana01
+    image: elastic/kibana:9.2.0
+    state: started
+    ports:
+      - "5601:5601"
+    network_mode: host
+    restart_policy: always
+    env:
+      ELASTICSEARCH_HOSTS: "{{HOST}}"

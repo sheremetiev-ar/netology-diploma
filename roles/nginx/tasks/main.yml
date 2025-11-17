@@ -1,0 +1,55 @@
+---
+# tasks file for nginx
+
+- name: Install nginx
+  apt:
+    name: nginx
+    state: present
+
+- name: add user to adm group
+  user:
+    name: "user"
+    group: "adm"
+    append: yes
+
+- name: Copy Index.html
+  template:
+    src: index.html.j2
+    dest: /var/www/html/index.html
+  notify:
+  - Restarted Nginx Service
+  - Wait for nginx
+
+- name: Print message
+  debug:
+    msg: "This is the task defined after copy index.html"
+
+- name: copy nginx.conf
+  template:
+    src: nginx.conf
+    dest: /etc/nginx/nginx.conf
+  notify:
+  - Restarted Nginx Service
+  - Wait for nginx
+
+- name: Print message
+  debug:
+    msg: "File nginx.conf was copied" 
+
+- name: copy website.conf
+  template:
+    src: website.conf
+    dest: /etc/nginx/sites-enabled/website.conf
+    mode: '0777'
+  notify:
+  - Restarted Nginx Service
+  - Wait for nginx
+
+- name: copy website.conf
+  template:
+    src: website.conf
+    dest: /etc/nginx/sites-available/website.conf
+    mode: '0777'
+  notify:
+  - Restarted Nginx Service
+  - Wait for nginx

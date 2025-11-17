@@ -8,6 +8,7 @@ resource "yandex_compute_instance" "bastion" {
   hostname	= "bastion"
   platform_id	= "standard-v3"
   zone		= "ru-central1-a"
+  allow_stopping_for_update = true
 
   resources {
     cores	   = 2
@@ -28,12 +29,12 @@ resource "yandex_compute_instance" "bastion" {
     serial-port-enable	= 1
   }
 
-  scheduling_policy { preemptible = true }
+  scheduling_policy { preemptible = false }
 
   network_interface {
     subnet_id		= yandex_vpc_subnet.diploma-zone-a.id
     nat			= true
-    security_group_ids	= [yandex_vpc_security_group.LAN.id, yandex_vpc_security_group.bastion.id]
+    security_group_ids	= [yandex_vpc_security_group.LAN.id, yandex_vpc_security_group.bastion.id, yandex_vpc_security_group.zabbix-security-group.id]
   }
 }
 
@@ -43,7 +44,7 @@ resource "yandex_compute_instance" "server-a" {
   hostname	= "server-a"
   platform_id	= "standard-v3"
   zone		= "ru-central1-a"
-
+  allow_stopping_for_update = true
 
   resources {
     cores		= 2
@@ -64,12 +65,12 @@ resource "yandex_compute_instance" "server-a" {
     serial-port-enable	= 1
   }
 
-  scheduling_policy { preemptible = true }
+  scheduling_policy { preemptible = false }
 
   network_interface {
     subnet_id		= yandex_vpc_subnet.diploma-zone-a.id
     nat			= false
-    security_group_ids	= [yandex_vpc_security_group.LAN.id, yandex_vpc_security_group.servers-security-group.id, yandex_vpc_security_group.elastic-security-group.id]
+    security_group_ids	= [yandex_vpc_security_group.LAN.id, yandex_vpc_security_group.servers-security-group.id, yandex_vpc_security_group.elastic-security-group.id, yandex_vpc_security_group.zabbix-security-group.id]
   }
 }
 
@@ -79,7 +80,7 @@ resource "yandex_compute_instance" "server-b" {
   hostname      = "server-b"
   platform_id   = "standard-v3"
   zone          = "ru-central1-b"
-
+  allow_stopping_for_update = true
 
   resources {
     cores               = 2
@@ -100,12 +101,12 @@ resource "yandex_compute_instance" "server-b" {
     serial-port-enable  = 1
   }
 
-  scheduling_policy { preemptible = true }
+  scheduling_policy { preemptible = false }
 
   network_interface {
     subnet_id           = yandex_vpc_subnet.diploma-zone-b.id
     nat                 = false
-    security_group_ids  = [yandex_vpc_security_group.LAN.id, yandex_vpc_security_group.servers-security-group.id, yandex_vpc_security_group.elastic-security-group.id]
+    security_group_ids  = [yandex_vpc_security_group.LAN.id, yandex_vpc_security_group.servers-security-group.id, yandex_vpc_security_group.elastic-security-group.id, yandex_vpc_security_group.zabbix-security-group.id]
   }
 }
 
@@ -127,7 +128,7 @@ resource "yandex_compute_instance" "elastic" {
     initialize_params {
       image_id  = data.yandex_compute_image.ubuntu-2404-lts.image_id
       type      = "network-hdd"
-      size      = 10
+      size      = 20
     }
   }
 
@@ -136,12 +137,12 @@ resource "yandex_compute_instance" "elastic" {
     serial-port-enable  = 1
   }
 
-  scheduling_policy { preemptible = true }
+  scheduling_policy { preemptible = false }
 
   network_interface {
     subnet_id           = yandex_vpc_subnet.diploma-zone-a.id
     nat                 = false
-    security_group_ids  = [yandex_vpc_security_group.LAN.id, yandex_vpc_security_group.elastic-security-group.id]
+    security_group_ids  = [yandex_vpc_security_group.LAN.id, yandex_vpc_security_group.elastic-security-group.id, yandex_vpc_security_group.zabbix-security-group.id]
   }
 }
 
@@ -172,24 +173,64 @@ resource "yandex_compute_instance" "kibana" {
     serial-port-enable  = 1
   }
 
-  scheduling_policy { preemptible = true }
+  scheduling_policy { preemptible = false }
 
   network_interface {
     subnet_id           = yandex_vpc_subnet.diploma-zone-a.id
     nat                 = true
-    security_group_ids  = [yandex_vpc_security_group.LAN.id, yandex_vpc_security_group.kibana-security-group.id]
+    security_group_ids  = [yandex_vpc_security_group.LAN.id, yandex_vpc_security_group.kibana-security-group.id, yandex_vpc_security_group.zabbix-security-group.id]
   }
 }
+
+# SERVER ZABBIX
+resource "yandex_compute_instance" "zabbix" {
+  name          = "zabbix"
+  hostname      = "zabbix"
+  platform_id   = "standard-v3"
+  zone          = "ru-central1-a"
+  allow_stopping_for_update = true
+
+  resources {
+    cores               = 2
+    memory              = 2
+    core_fraction       = 100
+  }
+
+  boot_disk {
+    initialize_params {
+      image_id  = data.yandex_compute_image.ubuntu-2404-lts.image_id
+      type      = "network-hdd"
+      size      = 10
+    }
+  }
+
+  metadata = {
+    user-data           = file("./cloud-init.yml")
+    serial-port-enable  = 1
+  }
+
+  scheduling_policy { preemptible = false }
+
+  network_interface {
+    subnet_id           = yandex_vpc_subnet.diploma-zone-a.id
+    nat                 = true
+    security_group_ids  = [yandex_vpc_security_group.LAN.id, yandex_vpc_security_group.zabbix-security-group.id, yandex_vpc_security_group.zabbix-web-security-group.id]
+  }
+}
+
 
 # ANSIBLE INVENTORY
 resource "local_file" "inventory" {
   content = <<-XYZ
 [bastion]
-${yandex_compute_instance.bastion.network_interface.0.nat_ip_address}
+${yandex_compute_instance.bastion.fqdn} ansible_host=${yandex_compute_instance.bastion.network_interface.0.nat_ip_address}
 
 [webservers]
 ${yandex_compute_instance.server-a.fqdn}
 ${yandex_compute_instance.server-b.fqdn}
+
+[zabbix]
+${yandex_compute_instance.zabbix.fqdn}
 
 [elasticsearch]
 ${yandex_compute_instance.elastic.fqdn}
@@ -197,14 +238,9 @@ ${yandex_compute_instance.elastic.fqdn}
 [kibana]
 ${yandex_compute_instance.kibana.fqdn}
 
-[kibana:vars]
+[all:vars]
 ansible_ssh_common_args='-o ProxyCommand="ssh -p 22 -W %h:%p -q user@${yandex_compute_instance.bastion.network_interface.0.nat_ip_address}"'
 
-[elasticsearch:vars]
-ansible_ssh_common_args='-o ProxyCommand="ssh -p 22 -W %h:%p -q user@${yandex_compute_instance.bastion.network_interface.0.nat_ip_address}"'
-
-[webservers:vars]
-ansible_ssh_common_args='-o ProxyCommand="ssh -p 22 -W %h:%p -q user@${yandex_compute_instance.bastion.network_interface.0.nat_ip_address}"'
 XYZ
 filename= "./hosts.ini"
 }

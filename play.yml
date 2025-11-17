@@ -1,0 +1,56 @@
+---
+- name: nginx
+  hosts: webservers
+  roles:
+    - role: './roles/nginx/'
+  vars:
+    ansible_ssh_user: "user"
+  become: yes
+
+- name: docker
+  hosts: webservers:elasticsearch:kibana
+  roles:
+    - role: './roles/docker/'
+  vars:
+    ansible_ssh_user: "user"
+  become: yes
+
+- name: elasticsearch
+  hosts: elasticsearch
+  roles:
+    - role: './roles/elastic/'
+  vars:
+    ansible_ssh_user: "user"
+  become: yes
+
+- name: filebeat
+  hosts: webservers
+  roles:
+    - role: './roles/filebeat/'
+  vars:
+    ansible_ssh_user: "user"
+  become: yes
+
+- name: kibana
+  hosts: kibana
+  roles:
+    - role: './roles/kibana/'
+  vars:
+    ansible_ssh_user: "user"
+  become: yes
+
+- name: zabbix-server
+  hosts: zabbix
+  roles:
+    - role: './roles/zabbix-server/'
+  vars:
+    ansible_ssh_user: "user"
+  become: yes
+
+- name: zabbix-agent
+  hosts: all
+  roles:
+    - role: './roles/zabbix-agent/'
+  vars:
+    ansible_ssh_user: "user"
+  become: yes

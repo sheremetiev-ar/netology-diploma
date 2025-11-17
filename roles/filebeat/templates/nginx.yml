@@ -1,0 +1,8 @@
+- module: nginx
+  # Включите нужные файлы логов
+  access:
+    enabled: true
+    var.paths: ["/usr/share/nginx/access.log"]
+  error:
+    enabled: true
+    var.paths: ["/usr/share/nginx/error.log"]

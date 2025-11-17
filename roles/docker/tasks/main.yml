@@ -1,0 +1,75 @@
+---
+# tasks file for docker
+
+- name: apt update
+  apt:
+    update_cache: yes
+
+- name: dependencies
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - software-properties-common
+    state: present
+
+- name: gpg key
+  shell: |
+    curl -fsSL {{ docker_gpg_url }} | apt-key add -
+
+- name: docker repo
+  apt_repository:
+    repo: "{{ docker_repo }}"
+    state: present
+
+- name: apt update
+  apt:
+    update_cache: yes
+
+- name: install docker
+  apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+    state: present
+
+- name: check docker
+  command: docker --version
+  register: docker_version
+  failed_when: docker_version.rc != 0
+
+- name: add user to docker group
+  ansible.builtin.user:
+    name: user
+    groups: docker
+    append: true
+
+- name: dowload docker compose
+  shell: |
+    curl -L -o /usr/local/bin/docker-compose {{ docker_compose_url }}
+  args:
+    creates: /usr/local/bin/docker-compose
+
+- name: docker-compose chmod
+  file:
+    path: /usr/local/bin/docker-compose
+    mode: '0755'
+
+- name: check docker compose
+  command: docker-compose --version
+  register: compose_version
+  failed_when: compose_version.rc != 0
+
+- name: restart docker
+  systemd:
+    name: docker
+    state: restarted
+    enabled: yes
+
+- name: show version of Docker, Docker Compose
+  debug:
+    msg:
+      - "Docker version: {{ docker_version.stdout }}"
+      - "Docker Compose version: {{ compose_version.stdout }}"

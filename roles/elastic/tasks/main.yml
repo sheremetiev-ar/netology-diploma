@@ -1,0 +1,17 @@
+---
+# tasks file for elastic
+- name: run container
+  docker_container:
+    name: es01
+    image: elasticsearch:9.2.0
+    state: started
+    restart_policy: unless-stopped
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    network_mode: host
+    env:
+      discovery.type: single-node
+      ES_JAVA_OPTS: "-Xms1g -Xmx1g"
+      xpack.security.enabled: "false"
+    privileged: yes

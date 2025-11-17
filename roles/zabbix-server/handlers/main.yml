@@ -1,0 +1,18 @@
+---
+# handlers file for zabbix-server
+
+- name: restart-mysql
+  service:
+    name: mysql
+    state: restarted
+    enabled: yes
+
+- name: restart-zabbix
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: restarted
+    enabled: true
+  with_items:
+    - zabbix-server
+    - nginx
+  become: true

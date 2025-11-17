@@ -1,0 +1,29 @@
+---
+# vars file for filebeat
+#filebeat_config: |
+#        filebeat.inputs:
+#          - type: log
+#            enabled: true
+#            allow_deprecated_use: true
+#            paths:
+#              - /usr/share/nginx/error.log
+#              - /usr/share/nginx/access.log
+#            fields:
+#              service: nginx_log
+#              enabled: true
+#        output.elasticsearch:
+#          hosts: ["elastic.ru-central1.internal:9200"]
+
+HOST: "elastic.ru-central1.internal:9200"
+PORT: "9200"
+
+#filebeat_config: |
+#        filebeat.modules:
+#          - module: nginx
+#            access:
+#              enabled: true
+#              var.paths: ["/usr/share/nginx/access.log"]
+#            error:
+#              enabled: true
+#              var.paths: ["/usr/share/nginx/error.log"]
+

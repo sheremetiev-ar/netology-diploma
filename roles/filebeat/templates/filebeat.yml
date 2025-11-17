@@ -1,0 +1,15 @@
+
+
+# ---------------------------- Elasticsearch Output ----------------------------
+
+filebeat.inputs:
+  - type: log
+    allow_deprecated_use: true
+    paths:
+      - /usr/share/nginx/access.log
+      - /usr/share/nginx/error.log
+output.elasticsearch:
+  hosts: ["elastic.ru-central1.internal:9200"] # Elasticsearch host(s)
+  #username: "filebeat_user" # If authentication is required
+  #password: "your_password"
+  #api_key: "API_KEY_ID:API_KEY" # More secure alternative to username/password

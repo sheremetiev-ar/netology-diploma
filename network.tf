@@ -127,3 +127,35 @@ resource "yandex_vpc_security_group" "kibana-security-group" {
     v4_cidr_blocks      = ["0.0.0.0/0"]
   }
 }
+
+# SECURITY GROUP ZABBIX
+resource "yandex_vpc_security_group" "zabbix-security-group" {
+  name          = "zabbix-security-group-diploma"
+  network_id    = yandex_vpc_network.diploma.id
+
+  ingress {
+    description         = "Allow ZABBIX AGENT PORT"
+    protocol            = "TCP"
+    port                = 10050
+    v4_cidr_blocks      = ["0.0.0.0/0"]
+  }
+  ingress {
+    description		= "Allow ZABBIX SERVER PORT"
+    protocol		= "TCP"
+    port		= 10051
+    v4_cidr_blocks      = ["0.0.0.0/0"]
+  }
+}
+
+# SECURITY GROUP ZABBIX WEB-INTERFACE
+resource "yandex_vpc_security_group" "zabbix-web-security-group" {
+  name			= "zabbix-web-security-group-diploma"
+  network_id		= yandex_vpc_network.diploma.id
+
+  ingress {
+    description         = "Allow ZABBIX WEB PORT"
+    protocol            = "TCP"
+    port                = 8080
+    v4_cidr_blocks      = ["0.0.0.0/0"]
+  }
+}

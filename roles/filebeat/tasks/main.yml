@@ -1,0 +1,54 @@
+---
+# tasks file for filebeat
+- name: creating filebeat dir
+  file:
+    path: /etc/filebeat
+    state: directory
+    owner: user
+    group: user
+    mode: '0755'
+
+#- name: create modules.d dir
+#  file:
+#    path: /etc/filebeat/modules.d/
+#    state: directory
+#    owner: user
+#    group: user
+#    mode: '0755'
+
+#- name: nginx.yml config
+#  template:
+#    src: nginx.yml
+#    dest: /etc/filebeat/modules.d/
+
+- name: chmod access.log
+  file:
+    path: /var/log/nginx/access.log
+    mode: '0755'
+
+- name: chmod error.log
+  file:
+    path: /var/log/nginx/error.log
+    mode: '0755'
+
+- name: filebeat.yml config
+  template:
+    src: filebeat.yml
+    dest: /etc/filebeat/
+
+- name: run container
+  docker_container:
+    name: filebeat01
+    image: elastic/filebeat:8.19.6
+    state: started
+    restart_policy: unless-stopped
+    network_mode: host
+    env:
+      ELASTICSEARCH_HOST: "{{HOST}}"
+      ELASTICSEARCH_PORT: "{{PORT}}"
+    volumes:
+#      - /etc/filebeat/modules.d/nginx.yml:/usr/share/filebeat/modules.d/nginx.yml:ro
+      - /etc/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
+      - /var/log/nginx/access.log:/usr/share/nginx/access.log:ro
+      - /var/log/nginx/error.log:/usr/share/nginx/error.log:ro
+#    command: bash -c "filebeat modules enable nginx && filebeat -e -strict.perms=false"
