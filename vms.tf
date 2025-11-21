@@ -1,8 +1,3 @@
-#data "yandex_compute_image" "ubuntu-2404-lts" {
-#  image_id = "fd86rorl7r6l2nq3ate6"
-#image_id  = data.yandex_compute_image.ubuntu-2404-lts.image_id
-#}
-
 # BASTION
 resource "yandex_compute_instance" "bastion" {
   name		= "bastion"
