@@ -1,6 +1,7 @@
-data "yandex_compute_image" "ubuntu-2404-lts" {
-  image_id = "fd86rorl7r6l2nq3ate6"
-}
+#data "yandex_compute_image" "ubuntu-2404-lts" {
+#  image_id = "fd86rorl7r6l2nq3ate6"
+#image_id  = data.yandex_compute_image.ubuntu-2404-lts.image_id
+#}
 
 # BASTION
 resource "yandex_compute_instance" "bastion" {
@@ -18,7 +19,8 @@ resource "yandex_compute_instance" "bastion" {
 
   boot_disk {
     initialize_params {
-      image_id	= data.yandex_compute_image.ubuntu-2404-lts.image_id
+      name	= "bastion-disk"
+      image_id	= "fd86rorl7r6l2nq3ate6"
       type	= "network-hdd"
       size	= 10
     }
@@ -54,7 +56,8 @@ resource "yandex_compute_instance" "server-a" {
 
   boot_disk {
     initialize_params {
-      image_id	= data.yandex_compute_image.ubuntu-2404-lts.image_id
+      name	= "server-a-disk"
+      image_id	= "fd86rorl7r6l2nq3ate6"
       type	= "network-hdd"
       size	= 10
     }
@@ -90,7 +93,8 @@ resource "yandex_compute_instance" "server-b" {
 
   boot_disk {
     initialize_params {
-      image_id  = data.yandex_compute_image.ubuntu-2404-lts.image_id
+      name	= "server-b-disk"
+      image_id  = "fd86rorl7r6l2nq3ate6"
       type      = "network-hdd"
       size      = 10
     }
@@ -126,7 +130,8 @@ resource "yandex_compute_instance" "elastic" {
 
   boot_disk {
     initialize_params {
-      image_id  = data.yandex_compute_image.ubuntu-2404-lts.image_id
+      name	= "elastic-disk"
+      image_id  = "fd86rorl7r6l2nq3ate6"
       type      = "network-hdd"
       size      = 20
     }
@@ -162,7 +167,8 @@ resource "yandex_compute_instance" "kibana" {
 
   boot_disk {
     initialize_params {
-      image_id  = data.yandex_compute_image.ubuntu-2404-lts.image_id
+      name	= "kibana-disk"
+      image_id  = "fd86rorl7r6l2nq3ate6"
       type      = "network-hdd"
       size      = 10
     }
@@ -198,7 +204,8 @@ resource "yandex_compute_instance" "zabbix" {
 
   boot_disk {
     initialize_params {
-      image_id  = data.yandex_compute_image.ubuntu-2404-lts.image_id
+      name	= "zabbix-disk"
+      image_id  = "fd86rorl7r6l2nq3ate6"
       type      = "network-hdd"
       size      = 10
     }
